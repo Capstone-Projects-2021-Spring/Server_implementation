@@ -1,17 +1,10 @@
 from flask import Flask, jsonify, request, session, redirect
-# from imageai.Detection import ObjectDetection
+from uuid import uuid4
 import os
-import time
+import object_detection
 
 app = Flask(__name__)
-'''
-execution_path = os.getcwd()
-
-detector = ObjectDetection()
-detector.setModelTypeAsRetinaNet()
-detector.setModelPath( os.path.join(execution_path , "resnet50_coco_best_v2.1.0.h5"))
-detector.loadModel()
-'''
+execution_path = os.path.dirname(os.path.abspath(__file__))
 
 
 @app.route('/uploadImage', methods=['POST'])
@@ -19,21 +12,36 @@ def upload_image():
     username = request.form.get('username')
     print(f'Receiving image from {username}')
 
-    upload_file = request.files['file']
-    print(upload_file.filename)
-    '''
-    if uploaded_file.filename != '':
-        uploaded_file.save(uploaded_file.filename)
-    
-    detections = detector.detectObjectsFromImage(input_image=os.path.join(execution_path, "test.jpeg"),
-                                                 output_image_path=os.path.join(execution_path, "imagenew.jpeg"))
+    # Ensure file is passed with request
+    if 'file' not in request.files:
+        return jsonify({'status': '400', 'error': 'No image passed with request'}), 400
 
-    for eachObject in detections:
-        print(eachObject["name"], " : ", eachObject["percentage_probability"])
-    '''
-    # os.remove(uploaded_file.filename)
-    # file.save(os.path.join(app.config['upload_folder'], filename))
+    upload_file = request.files['file']
+    
+    # Create a unique file name for this image request
+    # Hex encoded to ensure safe filename
+    filename = uuid4().hex
+
+    # Save file locally on server
+    filepath = os.path.join(execution_path, filename)
+    upload_file.save(filepath)
+
+    # Process photo to find all of the detected tags
+    # Tags are returned as a list of tuples
+    # Ex. [(predicted_tag, probability), ..., (predicted_tag, probability)]
+    res = object_detection.process_image(filepath)
+
+    # Iterate over all the items found
+    for item in res:
+        pred = item[0]  # Prediction
+        prob = item[1]  # Probability
+        print(f'Prediction: {pred}. Probability: {prob}')
+
+    # Remove file from server once it has been processed
+    os.remove(filepath)
+
     return jsonify({'status': 200, 'labels': 'test, '+username})
+
 
 @app.route('/getData', methods=['GET'])
 def retrieve_images():
@@ -47,6 +55,11 @@ def retrieve_images():
     query = query
     '''
     return jsonify({'status': 200, 'results': result})
+
+
 if __name__ == '__main__':
+    print('Importing object detection model')
+    object_detection.import_model()
+
     print('Starting server')
     app.run()
