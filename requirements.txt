@@ -4,3 +4,5 @@ imageai~=2.1.6
 pycryptodome
 requests-toolbelt
 gcloud
+python_jwt
+sseclient
