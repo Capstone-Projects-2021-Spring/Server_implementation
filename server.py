@@ -61,6 +61,11 @@ def retrieve_images():
 
 
 if __name__ == '__main__':
+    print('Attempting to find firebase api key in environmental variables')
+    if os.environ.get('firebase_api_key') is None:
+        raise Exception("No firebase api key found in environmental variables")
+    print('Found firebase api key')
+
     print('Importing object detection model')
     object_detection.import_model()
 
