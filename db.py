@@ -46,7 +46,7 @@ def add_tags(platform, user_identifier, photo_identifier, tags):
             # Set new tag for photo object
             db.child(f'{platform}/{user_identifier}/Photos/{photo_identifier}/photo_tags/{tag}').set(True)
             # Set new tag for search tag 'table'
-            db.child(f'{platform}/{user_identifier}/photoTags/{tag}/{photo_identifier}').set(True)
+            db.child(f'{platform}/{user_identifier}/photoTags/{tag}').child(photo_identifier).set(True)
         except Exception as e:
             print(f'Failed adding a tag for user: {user_identifier}, photo: {photo_identifier}')
             print(e)

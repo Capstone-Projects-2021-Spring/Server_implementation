@@ -1,5 +1,6 @@
 from imageai.Classification import ImageClassification
 import os
+import db
 
 execution_path = os.path.dirname(os.path.abspath(__file__))
 prediction = ImageClassification()
@@ -13,9 +14,32 @@ def import_model():
     prediction.loadModel()
 
 
+def process_new_job(job):
+    import_model()
+    tags = process_image(job.photo_path)
+    print(tags)
+    db.add_tags(platform=job.platform, user_identifier=job.email, photo_identifier=job.photo_identifier, tags=tags)
+
+    os.remove(job.photo_path)
+
+
 # Process an image at the specified path, returning all of the associated tags and their probabilities
 # Tags are returned as a list of tuples
 # Ex. [(predicted_tag, probability), ..., (predicted_tag, probability)]
-def process_image(image_path):
-    predictions, probabilities = prediction.classifyImage(os.path.join(execution_path, image_path))
-    return list(zip(predictions, probabilities))
+def process_image(image_path, min_probability=.70):
+    try:
+        predictions, probabilities = prediction.classifyImage(os.path.join(execution_path, image_path))
+    
+        ret_tags = list()
+        for tag in zip(predictions, probabilities):
+            if tag[1] >= min_probability:
+                ret_tags.append(tag[0])
+
+    except Exception as e:
+        print(e)
+            
+    return ret_tags or []
+
+
+if __name__ == '__main__':
+    print(process_image('/home/anon/Downloads/AKQXH4V3YYI6VF6BNTYRN77CNQ.jpg'))

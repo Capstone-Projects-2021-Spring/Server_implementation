@@ -6,3 +6,6 @@ requests-toolbelt
 gcloud
 python_jwt
 sseclient
+redis
+rq
+tensorflow
