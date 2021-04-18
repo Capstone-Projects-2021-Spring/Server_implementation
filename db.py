@@ -42,11 +42,19 @@ def add_tags(platform, user_identifier, photo_identifier, tags):
 
     # Iterate through all the tags adding each one individually to the photo object and the search tag table
     for tag in tags:
+        tag = tag.lower().replace('_', ' ')
+        print(f'Applying: {tag} to user: {user_identifier}')
         try:
             # Set new tag for photo object
             db.child(f'{platform}/{user_identifier}/Photos/{photo_identifier}/photo_tags/{tag}').set(True)
-            # Set new tag for search tag 'table'
-            db.child(f'{platform}/{user_identifier}/photoTags/{tag}').child(photo_identifier).set(True)
+
+            if platform == 'Android':
+                db.child(f'{platform}/{user_identifier}/PhotoTags/{tag}').child(photo_identifier).set(True)
+                db.child(f'{platform}/{user_identifier}/Photos/{photo_identifier}/AutoTagged').set(True)
+            else:
+                print('path: ', db.child(f'{platform}/{user_identifier}/photoTags/{tag}').child(photo_identifier).path)
+                db.child(f'{platform}/{user_identifier}/photoTags/{tag}').child(photo_identifier).set(True)
+                db.child(f'{platform}/{user_identifier}/Photos/{photo_identifier}/auto_tagged').set(True)
         except Exception as e:
             print(f'Failed adding a tag for user: {user_identifier}, photo: {photo_identifier}')
             print(e)
@@ -59,12 +67,6 @@ if __name__ == '__main__':
     print('Found firebase api key')
     
     print('Connecting to firebase')
-
-    print(auth_user('tui43030@temple.edu', 'admin123'))
-
-    photo_id = 'testPhotoId'
-    tags = ['abc123', '123abc']
-
     # try:
     #     add_tags(platform='iOS', user_identifier='sebastiantota', photo_identifier=photo_id, tags=tags)
     # except Exception as e:
