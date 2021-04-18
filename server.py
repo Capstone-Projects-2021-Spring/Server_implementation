@@ -81,10 +81,15 @@ def retrieve_images():
 
 
 if __name__ == '__main__':
+    print('Attempting to find ssl-certs')
+    if os.environ.get('SSL_CERT') is None or os.environ.get('SSL_KEY') is None:
+        raise Exception('No SSL Cert and Key found')
+    print("Found ssl certs")
+
     print('Attempting to find firebase api key in environmental variables')
     if os.environ.get('firebase_api_key') is None:
         raise Exception("No firebase api key found in environmental variables")
     print('Found firebase api key')
 
     print('Starting server')
-    app.run()
+    app.run(ssl_context=(os.environ.get('SSL_CERT'), os.environ.get('SSL_KEY')))
